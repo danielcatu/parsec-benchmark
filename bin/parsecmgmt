@@ -836,7 +836,7 @@ function build_package {
   else
       eval benchdir="ext\/${bench}"
   fi
-  
+
   local pkgdir=${PARSECDIR}/${benchdir}/${pkg_group}/${pkgname}
   local pkgsrcdir=${pkgdir}/src
   local pkgobjdir=${pkgdir}/obj/${PARSECPLAT}
@@ -905,10 +905,12 @@ function build_package {
   # Remove an already existing build directory
   if [ -e "${pkgobjdir}" ]; then
      echo "${oprefix} Removing old build directory." 2>&1 | ${TEE} ${log}
-     ${RM} ${pkgobjdir} 
+     ${RM} ${pkgobjdir}
   fi
 
   # Set up build directory
+  echo "${pkgobjdir} Creating build directory."
+  echo " ${CP} ${pkgsrcdir}/* ${pkgobjdir}"
   if [ "${build_inplace}" == "TRUE" ]; then
     local pkgbuildsrcdir=${pkgobjdir}
     echo "${oprefix} Copying source code of package ${pkg}." 2>&1 | ${TEE} ${log}
@@ -920,7 +922,9 @@ function build_package {
   fi
   pushd ${pkgobjdir} > /dev/null
 
+  echo "pkgbuildsrcdir: ${pkgbuildsrcdir}"
   # Run configure
+  eval chmod +x ${pkgbuildsrcdir}/configure
   if [ -x ${pkgbuildsrcdir}/configure ]; then
     local build_conf_pkg="${build_conf} ${build_conf_global}"
     # Current pwd is $pkgobjdir
@@ -929,6 +933,8 @@ function build_package {
     else
       local configcmd="env ${build_env} ${pkgbuildsrcdir}/configure ${build_conf_pkg}"
     fi
+    echo "configcmd:"
+    echo "configcmd: ${configcmd}"
     eval echo "${oprefix} Running \'${configcmd}\':" 2>&1 \| ${TEE} ${log}
     eval \( ${configcmd} 2>&1 \) 2>&1 \| ${TEE} ${log} \; retval=\${PIPESTATUS[0]}
     if [ "$retval" -ne "0" ]; then
